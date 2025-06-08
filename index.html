@@ -4026,15 +4026,32 @@
 
         // --- Employee Modal (Add/Edit) ---
         function openAddEmployeeModal() {
+            console.log('Add Employee button clicked - opening modal');
+
             document.getElementById('employeeForm').reset();
             document.getElementById('employeeId').value = '';
             document.getElementById('modalTitle').textContent = 'Add New Employee';
             document.getElementById('empCode').readOnly = false;
             // Repopulate department dropdown in modal in case it changed
             populateFilterDropdowns();
-            document.getElementById('employeeModal').classList.remove('hidden');
-            initializeModalDatePickers();
-            setupStatusChangeHandler();
+
+            // Fix: Reset both CSS class and inline style
+            const modal = document.getElementById('employeeModal');
+            console.log('Modal element found:', modal);
+            console.log('Modal classes before:', modal.className);
+            console.log('Modal display style before:', modal.style.display);
+
+            modal.classList.remove('hidden');
+            modal.style.display = 'block';
+
+            console.log('Modal classes after:', modal.className);
+            console.log('Modal display style after:', modal.style.display);
+
+            // Initialize date pickers with delay for mobile compatibility
+            setTimeout(() => {
+                initializeModalDatePickers();
+                setupStatusChangeHandler();
+            }, 100);
         }
 
          function openEditEmployeeModal(employeeId) {
@@ -4076,16 +4093,68 @@
             document.getElementById('leaveBalance').value = emp.annualLeaveBalance || emp.annual_leave_balance || '';
 
              initializeModalDatePickers();
-             flatpickr("#hiringDate").setDate(emp.hiringDate || emp.hiring_date || '', true);
-             flatpickr("#dob").setDate(emp.dob || emp.date_of_birth || '', true);
-             flatpickr("#resignDate").setDate(emp.resignDate || emp.resign_date || '', true);
 
-            document.getElementById('employeeModal').classList.remove('hidden');
+             // Wait for date pickers to initialize before setting dates
+             setTimeout(() => {
+                 // Safe date setting with error handling
+                 try {
+                     const hiringDateInput = document.querySelector('#hiringDate');
+                     if (hiringDateInput && hiringDateInput._flatpickr) {
+                         hiringDateInput._flatpickr.setDate(emp.hiringDate || emp.hiring_date || '', true);
+                         console.log('Set hiring date:', emp.hiringDate || emp.hiring_date);
+                     } else {
+                         // Fallback: set input value directly
+                         if (hiringDateInput) {
+                             hiringDateInput.value = emp.hiringDate || emp.hiring_date || '';
+                         }
+                     }
+                 } catch (error) {
+                     console.warn('Error setting hiring date:', error);
+                 }
+
+                 try {
+                     const dobInput = document.querySelector('#dob');
+                     if (dobInput && dobInput._flatpickr) {
+                         dobInput._flatpickr.setDate(emp.dob || emp.date_of_birth || '', true);
+                         console.log('Set DOB:', emp.dob || emp.date_of_birth);
+                     } else {
+                         // Fallback: set input value directly
+                         if (dobInput) {
+                             dobInput.value = emp.dob || emp.date_of_birth || '';
+                         }
+                     }
+                 } catch (error) {
+                     console.warn('Error setting DOB:', error);
+                 }
+
+                 try {
+                     const resignDateInput = document.querySelector('#resignDate');
+                     if (resignDateInput && resignDateInput._flatpickr) {
+                         resignDateInput._flatpickr.setDate(emp.resignDate || emp.resign_date || '', true);
+                         console.log('Set resign date:', emp.resignDate || emp.resign_date);
+                     } else {
+                         // Fallback: set input value directly
+                         if (resignDateInput) {
+                             resignDateInput.value = emp.resignDate || emp.resign_date || '';
+                         }
+                     }
+                 } catch (error) {
+                     console.warn('Error setting resign date:', error);
+                 }
+             }, 200); // Wait 200ms for initialization
+
+            // Fix: Reset both CSS class and inline style
+            const modal = document.getElementById('employeeModal');
+            modal.classList.remove('hidden');
+            modal.style.display = 'block';
+
             setupStatusChangeHandler();
         }
 
         function closeEmployeeModal() {
-            document.getElementById('employeeModal').classList.add('hidden');
+            const modal = document.getElementById('employeeModal');
+            modal.classList.add('hidden');
+            modal.style.display = 'none';
         }
 
         // Setup status change handler for resign date logic
@@ -7749,13 +7818,67 @@
         }
 
         function initializeModalDatePickers() {
-             const dateInputs = document.querySelectorAll('#employeeModal .flatpickr-input');
-             dateInputs.forEach(input => {
-                if (input._flatpickr) input._flatpickr.destroy();
-             });
-            flatpickr("#employeeModal .flatpickr-input", {
-                altInput: true, altFormat: "F j, Y", dateFormat: "Y-m-d", allowInput: true
-            });
+            try {
+                console.log('Initializing modal date pickers...');
+
+                // Destroy existing instances first
+                const dateInputs = document.querySelectorAll('#employeeModal .flatpickr-input');
+                dateInputs.forEach(input => {
+                    if (input._flatpickr) {
+                        console.log('Destroying existing flatpickr instance for:', input.id);
+                        input._flatpickr.destroy();
+                    }
+                });
+
+                // Wait a moment for DOM to be ready
+                setTimeout(() => {
+                    try {
+                        // Initialize with mobile-friendly options
+                        const options = {
+                            altInput: true,
+                            altFormat: "F j, Y",
+                            dateFormat: "Y-m-d",
+                            allowInput: true,
+                            // Mobile-specific options
+                            disableMobile: false, // Allow mobile native picker as fallback
+                            clickOpens: true,
+                            // Error handling
+                            onReady: function(selectedDates, dateStr, instance) {
+                                console.log('Flatpickr ready for:', instance.element.id);
+                            },
+                            onError: function(error) {
+                                console.warn('Flatpickr error:', error);
+                            }
+                        };
+
+                        // Initialize each date input individually for better error handling
+                        const hiringDateInput = document.querySelector('#hiringDate');
+                        const dobInput = document.querySelector('#dob');
+                        const resignDateInput = document.querySelector('#resignDate');
+
+                        if (hiringDateInput) {
+                            flatpickr(hiringDateInput, options);
+                            console.log('Initialized hiring date picker');
+                        }
+
+                        if (dobInput) {
+                            flatpickr(dobInput, options);
+                            console.log('Initialized DOB picker');
+                        }
+
+                        if (resignDateInput) {
+                            flatpickr(resignDateInput, options);
+                            console.log('Initialized resign date picker');
+                        }
+
+                    } catch (error) {
+                        console.error('Error initializing individual date pickers:', error);
+                    }
+                }, 100);
+
+            } catch (error) {
+                console.error('Error in initializeModalDatePickers:', error);
+            }
         }
 
         // Run on page load
