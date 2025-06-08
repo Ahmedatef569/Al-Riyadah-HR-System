@@ -51,8 +51,8 @@ A comprehensive, modern HR management system built with vanilla JavaScript and S
 
 ### 1. Clone Repository
 ```bash
-git clone https://github.com/yourusername/hr-management-system.git
-cd hr-management-system
+git clone https://github.com/ahmedatef569/Al-Riyadah-HR-System.git
+cd Al-Riyadah-HR-System
 ```
 
 ### 2. Supabase Setup
@@ -131,6 +131,7 @@ http-server -p 8080
 hr-management-system/
 ├── index.html                 # Main application file
 ├── supabase.js               # Database integration layer
+├── site.webmanifest          # Progressive Web App manifest
 ├── database-schema.sql       # Database setup script
 ├── SETUP_GUIDE.md           # Detailed setup instructions
 ├── DEPLOYMENT_CHECKLIST.md  # Deployment guide
