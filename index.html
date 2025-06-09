@@ -4139,16 +4139,31 @@
                 const yearSelect = document.getElementById(`${type}Year`);
                 const hiddenInput = document.getElementById(`${type}Date`);
 
-                if (daySelect) daySelect.value = '';
-                if (monthSelect) monthSelect.value = '';
-                if (yearSelect) yearSelect.value = '';
-                if (hiddenInput) hiddenInput.value = '';
+                if (daySelect) {
+                    daySelect.value = '';
+                    daySelect.selectedIndex = 0;
+                }
+                if (monthSelect) {
+                    monthSelect.value = '';
+                    monthSelect.selectedIndex = 0;
+                }
+                if (yearSelect) {
+                    yearSelect.value = '';
+                    yearSelect.selectedIndex = 0;
+                }
+                if (hiddenInput) {
+                    hiddenInput.value = '';
+                }
             });
+            console.log('All date dropdowns cleared completely');
         }
 
         // Helper function to set date dropdowns from a date string
         function setDateDropdowns(type, dateString) {
-            if (!dateString) return;
+            if (!dateString) {
+                console.log(`No date provided for ${type}, skipping`);
+                return;
+            }
 
             try {
                 const date = new Date(dateString);
@@ -4161,14 +4176,34 @@
                 const yearSelect = document.getElementById(`${type}Year`);
                 const hiddenInput = document.getElementById(`${type}Date`);
 
-                if (daySelect) daySelect.value = day;
-                if (monthSelect) monthSelect.value = month;
-                if (yearSelect) yearSelect.value = year;
-                if (hiddenInput) hiddenInput.value = dateString;
+                console.log(`Setting ${type} date dropdowns:`, { day, month, year, dateString });
 
-                console.log(`Set ${type} date dropdowns:`, { day, month, year, dateString });
+                if (daySelect) {
+                    daySelect.value = day;
+                    console.log(`Set ${type}Day to:`, day);
+                }
+                if (monthSelect) {
+                    monthSelect.value = month;
+                    console.log(`Set ${type}Month to:`, month);
+                }
+                if (yearSelect) {
+                    yearSelect.value = year;
+                    console.log(`Set ${type}Year to:`, year);
+                }
+                if (hiddenInput) {
+                    hiddenInput.value = dateString;
+                    console.log(`Set ${type}Date hidden field to:`, dateString);
+                }
+
+                // Trigger the update event to ensure sync
+                if (daySelect && monthSelect && yearSelect) {
+                    const event = new Event('change');
+                    daySelect.dispatchEvent(event);
+                }
+
+                console.log(`Successfully set ${type} date dropdowns:`, { day, month, year, dateString });
             } catch (error) {
-                console.warn(`Error setting ${type} date dropdowns:`, error);
+                console.error(`Error setting ${type} date dropdowns:`, error);
             }
         }
 
@@ -4393,14 +4428,33 @@
                 return;
             }
 
+            // Helper function to get valid date or null
+            function getValidDateOrNull(fieldId) {
+                const value = document.getElementById(fieldId).value;
+                console.log(`Checking date field ${fieldId}:`, value);
+
+                if (!value || value.trim() === '') {
+                    console.log(`Date field ${fieldId} is empty`);
+                    return null;
+                }
+                // Validate date format
+                const date = new Date(value);
+                if (isNaN(date.getTime())) {
+                    console.log(`Date field ${fieldId} has invalid date:`, value);
+                    return null;
+                }
+                console.log(`Date field ${fieldId} is valid:`, value);
+                return value;
+            }
+
             const formData = {
                 id: isEditing ? employeeId : empCode,
                 fullName: document.getElementById('fullName').value,
                 gender: document.getElementById('gender').value,
-                hiringDate: document.getElementById('hiringDate').value,
+                hiringDate: getValidDateOrNull('hiringDate'),
                 position: positionValue,
                 department: departmentValue,
-                dob: document.getElementById('dob').value,
+                dob: getValidDateOrNull('dob'),
                 phone: document.getElementById('phone').value,
                 email: document.getElementById('email').value,
                 address: document.getElementById('address').value,
@@ -4410,12 +4464,40 @@
                 militaryStatus: document.getElementById('militaryStatus').value || null,
                 level: document.getElementById('level').value,
                 directManager: document.getElementById('directManager').value || null,
-                resignDate: status === 'Active' ? null : (document.getElementById('resignDate').value || null),
+                resignDate: status === 'Active' ? null : getValidDateOrNull('resignDate'),
                 maritalStatus: document.getElementById('maritalStatus').value || null,
                 faculty: document.getElementById('faculty').value || null,
                 gradYear: document.getElementById('gradYear').value ? parseInt(document.getElementById('gradYear').value) : null,
                 annualLeaveBalance: document.getElementById('leaveBalance').value ? parseInt(document.getElementById('leaveBalance').value) : null,
             };
+
+            // Debug: Log all form data
+            console.log('Complete form data:', formData);
+            console.log('DOB value from form:', formData.dob);
+            console.log('Hiring date value from form:', formData.hiringDate);
+
+            // Check hidden field values directly
+            console.log('Hidden field values:');
+            console.log('- hiringDate field:', document.getElementById('hiringDate').value);
+            console.log('- dob field:', document.getElementById('dob').value);
+            console.log('- resignDate field:', document.getElementById('resignDate').value);
+
+            // Check dropdown values
+            console.log('DOB dropdown values:');
+            console.log('- dobDay:', document.getElementById('dobDay').value);
+            console.log('- dobMonth:', document.getElementById('dobMonth').value);
+            console.log('- dobYear:', document.getElementById('dobYear').value);
+
+            // Validate required dates
+            if (!formData.hiringDate) {
+                showMessage('Hiring date is required.', 'error');
+                return;
+            }
+
+            if (!formData.dob) {
+                showMessage('Date of birth is required.', 'error');
+                return;
+            }
 
             try {
                 // Prepare data for Supabase (convert field names to match database schema)
@@ -8047,6 +8129,11 @@
                     const formattedMonth = month.padStart(2, '0');
                     const formattedDay = day.padStart(2, '0');
                     dateField.value = `${year}-${formattedMonth}-${formattedDay}`;
+                    console.log(`Updated ${dateFieldId}:`, dateField.value);
+                } else {
+                    // Clear the hidden field if any dropdown is empty
+                    dateField.value = '';
+                    console.log(`Cleared ${dateFieldId} - incomplete selection`);
                 }
             };
 
