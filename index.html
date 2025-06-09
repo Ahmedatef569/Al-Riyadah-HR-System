@@ -4058,26 +4058,19 @@
             document.getElementById('employeeId').value = '';
             document.getElementById('modalTitle').textContent = 'Add New Employee';
             document.getElementById('empCode').readOnly = false;
+
+            // Clear all date dropdowns completely
+            clearAllDateDropdowns();
+
             // Repopulate department dropdown in modal in case it changed
             populateFilterDropdowns();
 
             // Fix: Reset both CSS class and inline style
             const modal = document.getElementById('employeeModal');
-            console.log('Modal element found:', modal);
-            console.log('Modal classes before:', modal.className);
-            console.log('Modal display style before:', modal.style.display);
-
             modal.classList.remove('hidden');
             modal.style.display = 'block';
 
-            console.log('Modal classes after:', modal.className);
-            console.log('Modal display style after:', modal.style.display);
-
-            // Initialize date pickers with delay for mobile compatibility
-            setTimeout(() => {
-                initializeModalDatePickers();
-                setupStatusChangeHandler();
-            }, 100);
+            setupStatusChangeHandler();
         }
 
          function openEditEmployeeModal(employeeId) {
@@ -4118,56 +4111,10 @@
             document.getElementById('gradYear').value = emp.gradYear || emp.grad_year || '';
             document.getElementById('leaveBalance').value = emp.annualLeaveBalance || emp.annual_leave_balance || '';
 
-             initializeModalDatePickers();
-
-             // Wait for date pickers to initialize before setting dates
-             setTimeout(() => {
-                 // Safe date setting with error handling
-                 try {
-                     const hiringDateInput = document.querySelector('#hiringDate');
-                     if (hiringDateInput && hiringDateInput._flatpickr) {
-                         hiringDateInput._flatpickr.setDate(emp.hiringDate || emp.hiring_date || '', true);
-                         console.log('Set hiring date:', emp.hiringDate || emp.hiring_date);
-                     } else {
-                         // Fallback: set input value directly
-                         if (hiringDateInput) {
-                             hiringDateInput.value = emp.hiringDate || emp.hiring_date || '';
-                         }
-                     }
-                 } catch (error) {
-                     console.warn('Error setting hiring date:', error);
-                 }
-
-                 try {
-                     const dobInput = document.querySelector('#dob');
-                     if (dobInput && dobInput._flatpickr) {
-                         dobInput._flatpickr.setDate(emp.dob || emp.date_of_birth || '', true);
-                         console.log('Set DOB:', emp.dob || emp.date_of_birth);
-                     } else {
-                         // Fallback: set input value directly
-                         if (dobInput) {
-                             dobInput.value = emp.dob || emp.date_of_birth || '';
-                         }
-                     }
-                 } catch (error) {
-                     console.warn('Error setting DOB:', error);
-                 }
-
-                 try {
-                     const resignDateInput = document.querySelector('#resignDate');
-                     if (resignDateInput && resignDateInput._flatpickr) {
-                         resignDateInput._flatpickr.setDate(emp.resignDate || emp.resign_date || '', true);
-                         console.log('Set resign date:', emp.resignDate || emp.resign_date);
-                     } else {
-                         // Fallback: set input value directly
-                         if (resignDateInput) {
-                             resignDateInput.value = emp.resignDate || emp.resign_date || '';
-                         }
-                     }
-                 } catch (error) {
-                     console.warn('Error setting resign date:', error);
-                 }
-             }, 200); // Wait 200ms for initialization
+             // Set date dropdowns for editing
+             setDateDropdowns('hiring', emp.hiringDate || emp.hiring_date);
+             setDateDropdowns('dob', emp.dob || emp.date_of_birth);
+             setDateDropdowns('resign', emp.resignDate || emp.resign_date);
 
             // Fix: Reset both CSS class and inline style
             const modal = document.getElementById('employeeModal');
@@ -4181,6 +4128,48 @@
             const modal = document.getElementById('employeeModal');
             modal.classList.add('hidden');
             modal.style.display = 'none';
+        }
+
+        // Helper function to clear all date dropdowns
+        function clearAllDateDropdowns() {
+            const dateTypes = ['hiring', 'dob', 'resign'];
+            dateTypes.forEach(type => {
+                const daySelect = document.getElementById(`${type}Day`);
+                const monthSelect = document.getElementById(`${type}Month`);
+                const yearSelect = document.getElementById(`${type}Year`);
+                const hiddenInput = document.getElementById(`${type}Date`);
+
+                if (daySelect) daySelect.value = '';
+                if (monthSelect) monthSelect.value = '';
+                if (yearSelect) yearSelect.value = '';
+                if (hiddenInput) hiddenInput.value = '';
+            });
+        }
+
+        // Helper function to set date dropdowns from a date string
+        function setDateDropdowns(type, dateString) {
+            if (!dateString) return;
+
+            try {
+                const date = new Date(dateString);
+                const day = date.getDate();
+                const month = date.getMonth() + 1; // getMonth() returns 0-11
+                const year = date.getFullYear();
+
+                const daySelect = document.getElementById(`${type}Day`);
+                const monthSelect = document.getElementById(`${type}Month`);
+                const yearSelect = document.getElementById(`${type}Year`);
+                const hiddenInput = document.getElementById(`${type}Date`);
+
+                if (daySelect) daySelect.value = day;
+                if (monthSelect) monthSelect.value = month;
+                if (yearSelect) yearSelect.value = year;
+                if (hiddenInput) hiddenInput.value = dateString;
+
+                console.log(`Set ${type} date dropdowns:`, { day, month, year, dateString });
+            } catch (error) {
+                console.warn(`Error setting ${type} date dropdowns:`, error);
+            }
         }
 
         // Setup status change handler for resign date logic
@@ -7843,74 +7832,11 @@
             });
         }
 
-        function initializeModalDatePickers() {
-            try {
-                console.log('Initializing modal date pickers...');
-
-                // Destroy existing instances first
-                const dateInputs = document.querySelectorAll('#employeeModal .flatpickr-input');
-                dateInputs.forEach(input => {
-                    if (input._flatpickr) {
-                        console.log('Destroying existing flatpickr instance for:', input.id);
-                        input._flatpickr.destroy();
-                    }
-                });
-
-                // Wait a moment for DOM to be ready
-                setTimeout(() => {
-                    try {
-                        // Initialize with mobile-friendly options
-                        const options = {
-                            altInput: true,
-                            altFormat: "F j, Y",
-                            dateFormat: "Y-m-d",
-                            allowInput: true,
-                            // Mobile-specific options
-                            disableMobile: false, // Allow mobile native picker as fallback
-                            clickOpens: true,
-                            // Error handling
-                            onReady: function(selectedDates, dateStr, instance) {
-                                console.log('Flatpickr ready for:', instance.element.id);
-                            },
-                            onError: function(error) {
-                                console.warn('Flatpickr error:', error);
-                            }
-                        };
-
-                        // Initialize each date input individually for better error handling
-                        const hiringDateInput = document.querySelector('#hiringDate');
-                        const dobInput = document.querySelector('#dob');
-                        const resignDateInput = document.querySelector('#resignDate');
-
-                        if (hiringDateInput) {
-                            flatpickr(hiringDateInput, options);
-                            console.log('Initialized hiring date picker');
-                        }
-
-                        if (dobInput) {
-                            flatpickr(dobInput, options);
-                            console.log('Initialized DOB picker');
-                        }
-
-                        if (resignDateInput) {
-                            flatpickr(resignDateInput, options);
-                            console.log('Initialized resign date picker');
-                        }
-
-                    } catch (error) {
-                        console.error('Error initializing individual date pickers:', error);
-                    }
-                }, 100);
-
-            } catch (error) {
-                console.error('Error in initializeModalDatePickers:', error);
-            }
-        }
+        // Removed complex Flatpickr initialization - using simple dropdowns only
 
         // Run on page load
         document.addEventListener('DOMContentLoaded', () => {
              initializeDatePickers();
-             initializeModalDatePickers();
              console.log("Page loaded. Waiting for login.");
 
              // EMERGENCY FIX: Ensure all modals are closed on page load
