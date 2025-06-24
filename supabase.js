@@ -1,12 +1,14 @@
-// Full supabase.js restored with email header support
+// Original supabase.js + RLS email header support
 
 const SUPABASE_URL = 'https://ruhnevpkbsyxfnanjlpo.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlhdCI6MTY5Njg4MzkyNSwiZXhwIjoxOjk2ODgzOTI1fQ.8t0OevmY-k7iUi1e_q6POaI0MEuSStWry5ZM7M';
 
+let emailHeader = localStorage.getItem("loggedInEmail") || "";
+
 let supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   global: {
     headers: {
-      'x-user-email': localStorage.getItem("loggedInEmail") || ""
+      "x-user-email": emailHeader
     }
   }
 });

@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>HR System</title>
-  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <h1>Welcome to the HR System</h1>
@@ -34,9 +33,7 @@
       if (user) {
         localStorage.setItem("loggedInEmail", user.email);
         localStorage.setItem("loggedInRole", user.role);
-        showDashboard(user.role);
-        document.getElementById("login-section").style.display = "none";
-        document.getElementById("dashboard-section").style.display = "block";
+        location.reload(); // Refresh to update client with correct email
       } else {
         document.getElementById("login-error").innerText = "Invalid email or password";
       }
@@ -44,8 +41,7 @@
 
     function handleLogout() {
       localStorage.clear();
-      document.getElementById("dashboard-section").style.display = "none";
-      document.getElementById("login-section").style.display = "block";
+      location.reload();
     }
 
     function showDashboard(role) {
@@ -78,9 +74,9 @@
       const email = localStorage.getItem("loggedInEmail");
       const role = localStorage.getItem("loggedInRole");
       if (email && role) {
-        showDashboard(role);
         document.getElementById("login-section").style.display = "none";
         document.getElementById("dashboard-section").style.display = "block";
+        showDashboard(role);
       }
     };
   </script>
