@@ -4,21 +4,85 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>HR System</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <h1>Welcome to the HR System</h1>
 
-  <!-- Load Supabase from CDN -->
+  <div id="login-section">
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <button onclick="handleLogin()">Login</button>
+    <p id="login-error" style="color:red;"></p>
+  </div>
+
+  <div id="dashboard-section" style="display:none;">
+    <button onclick="handleLogout()">Logout</button>
+    <div id="sidebar"></div>
+    <div id="content"></div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-  <!-- Load your local Supabase client configuration -->
   <script src="./supabase.js"></script>
 
-  <!-- Example: initialize the client -->
   <script>
-    window.initializeSupabase().then(client => {
-      console.log("Supabase client initialized:", client);
-      // Your app logic goes here...
-    });
+    async function handleLogin() {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const user = await getUserByCredentials(email, password);
+
+      if (user) {
+        localStorage.setItem("loggedInEmail", user.email);
+        localStorage.setItem("loggedInRole", user.role);
+        showDashboard(user.role);
+        document.getElementById("login-section").style.display = "none";
+        document.getElementById("dashboard-section").style.display = "block";
+      } else {
+        document.getElementById("login-error").innerText = "Invalid email or password";
+      }
+    }
+
+    function handleLogout() {
+      localStorage.clear();
+      document.getElementById("dashboard-section").style.display = "none";
+      document.getElementById("login-section").style.display = "block";
+    }
+
+    function showDashboard(role) {
+      const sidebar = document.getElementById("sidebar");
+      sidebar.innerHTML = "";
+
+      const sections = {
+        admin: ["employees", "departments", "attendance", "salaries", "payroll", "leave_requests", "performance_reviews", "projects"],
+        admin_1: ["employees", "departments", "attendance", "leave_requests", "performance_reviews", "projects"],
+        manager: ["employees", "attendance", "leave_requests"],
+        employee: ["attendance", "leave_requests"]
+      };
+
+      const visibleSections = sections[role] || [];
+
+      visibleSections.forEach((section) => {
+        const button = document.createElement("button");
+        button.innerText = section;
+        button.onclick = () => loadSection(section);
+        sidebar.appendChild(button);
+      });
+    }
+
+    function loadSection(section) {
+      const content = document.getElementById("content");
+      content.innerHTML = `<p>Loading ${section}...</p>`;
+    }
+
+    window.onload = () => {
+      const email = localStorage.getItem("loggedInEmail");
+      const role = localStorage.getItem("loggedInRole");
+      if (email && role) {
+        showDashboard(role);
+        document.getElementById("login-section").style.display = "none";
+        document.getElementById("dashboard-section").style.display = "block";
+      }
+    };
   </script>
 </body>
 </html>
