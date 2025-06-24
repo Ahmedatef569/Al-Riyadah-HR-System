@@ -28,12 +28,16 @@
     async function handleLogin() {
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value.trim();
-      const user = await getUserByCredentials(email, password);
 
+      supabase = createSupabaseClient(email); // ✅ now client uses correct header
+
+      const user = await getUserByCredentials(email, password);
       if (user) {
         localStorage.setItem("loggedInEmail", user.email);
         localStorage.setItem("loggedInRole", user.role);
-        location.reload(); // Refresh to update client with correct email
+        document.getElementById("login-section").style.display = "none";
+        document.getElementById("dashboard-section").style.display = "block";
+        showDashboard(user.role);
       } else {
         document.getElementById("login-error").innerText = "Invalid email or password";
       }
@@ -65,20 +69,21 @@
       });
     }
 
-    function loadSection(section) {
-      const content = document.getElementById("content");
-      content.innerHTML = `<p>Loading ${section}...</p>`;
-    }
-
     window.onload = () => {
       const email = localStorage.getItem("loggedInEmail");
       const role = localStorage.getItem("loggedInRole");
       if (email && role) {
+        supabase = createSupabaseClient(email); // ✅ recreate with stored email
         document.getElementById("login-section").style.display = "none";
         document.getElementById("dashboard-section").style.display = "block";
         showDashboard(role);
       }
     };
+
+    function loadSection(section) {
+      const content = document.getElementById("content");
+      content.innerHTML = `<p>Loading ${section}...</p>`;
+    }
   </script>
 </body>
 </html>
